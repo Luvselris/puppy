@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>เค้ามาง้อปั้ป ♡</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mitr:wght@300;400;500;600&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Firebase SDK สำหรับเก็บข้อความความในใจ -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+  <style>
+    :root {
+      --bg-pink: #fff5f8;
+      --card-bg: rgba(255, 255, 255, 0.95);
+      --pink-soft: #fbcfe8;
+      --pink-main: #f47291;
+      --pink-deep: #e85375;
+      --pink-border: #ffd6e0;
+      --text-main: #4a3e42;
+      --text-muted: #8f7d82;
+      --glow: 0 10px 30px rgba(244, 114, 145, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Quicksand', 'Mitr', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at top, #ffffff 0%, #fff2f5 55%, #ffe6ec 100%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* เลเยอร์ลูกเล่นลอย ☁️ 🩷 */
+    .floating-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+      overflow: hidden;
+    }
+    .float-item {
+      position: absolute;
+      bottom: -60px;
+      font-size: 26px;
+      animation: floatUp 10s linear infinite;
+      opacity: 0.85;
+      filter: drop-shadow(0 4px 8px rgba(244, 114, 145, 0.25));
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+      15% { opacity: 0.9; }
+      85% { opacity: 0.9; }
+      100% { transform: translateY(-115vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* คอนเทนเนอร์การ์ดตรงกลาง */
+    .app-card {
+      background: var(--card-bg);
+      border: 2px solid var(--pink-border);
+      border-radius: 32px;
+      padding: 28px 22px;
+      text-align: center;
+      width: 100%;
+      max-width: 360px;
+      box-shadow: var(--glow);
+      backdrop-filter: blur(12px);
+      position: relative;
+      z-index: 2;
+      animation: popIn 0.35s ease;
+    }
+    @keyframes popIn {
+      from { transform: scale(0.9); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .main-gif {
+      width: 100%;
+      max-height: 230px;
+      object-fit: contain;
+      border-radius: 20px;
+      margin-bottom: 14px;
+      pointer-events: none;
+    }
+
+    .card-title {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--pink-main);
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 13.5px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+      white-space: pre-line;
+      padding: 0 4px;
+    }
+
+    /* ปุ่มหลัก */
+    .btn-yes {
+      background: linear-gradient(135deg, var(--pink-soft), var(--pink-main));
+      color: #ffffff;
+      border: none;
+      padding: 13px 24px;
+      border-radius: 24px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(244, 114, 145, 0.35);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-yes:active { transform: scale(0.95); }
+
+    /* ปุ่มหนี (ไม่เอาไม่คืนดี) */
+    .btn-no {
+      background: #f1f5f9;
+      color: #94a3b8;
+      border: 1px solid #e2e8f0;
+      padding: 12px 20px;
+      border-radius: 24px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transition: all 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+      position: relative;
+    }
+
+    .buttons-row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 10px;
+      min-height: 55px;
+    }
+
+    /* กล่องเขียนข้อความในใจ */
+    .msg-input-box {
+      width: 100%;
+      border: 1.5px solid var(--pink-border);
+      border-radius: 18px;
+      padding: 12px 14px;
+      font-size: 13.5px;
+      color: var(--text-main);
+      outline: none;
+      resize: vertical;
+      min-height: 85px;
+      background: #ffffff;
+      margin-top: 10px;
+      margin-bottom: 10px;
+      user-select: text;
+    }
+    .msg-input-box:focus { border-color: var(--pink-main); }
+
+    /* รายการข้อความที่แฟนเคยเขียนตอบ */
+    .feedback-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
+      max-height: 180px;
+      overflow-y: auto;
+      text-align: left;
+    }
+    .feedback-item {
+      background: #fff8fa;
+      border: 1px dashed var(--pink-border);
+      border-radius: 14px;
+      padding: 10px 12px;
+      font-size: 12.5px;
+      color: var(--text-main);
+      line-height: 1.5;
+      user-select: text;
+      white-space: pre-wrap;
+    }
+    .feedback-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    /* จัดการสลับหน้า */
+    .page-section { display: none; }
+    .page-section.active { display: block; }
+  </style>
+</head>
+<body>
+
+  <!-- เครื่องเล่นเพลงง้อ(ววว) -->
+  <audio id="bgMusic" loop preload="auto" src="https://file.garden/asG8Gt-rqWIpi3II/%E0%B8%87%E0%B9%89%E0%B8%AD(%E0%B8%A7%E0%B8%A7%E0%B8%A7)%20-%E0%B8%9E%E0%B8%A5%E0%B8%B0%20%26%20%E0%B8%AA%E0%B9%89%E0%B8%A1%E0%B8%AA%E0%B9%89%E0%B8%A1%20-%20Original%20by%20KT%20LongFlowing.mp3"></audio>
+
+  <!-- เลเยอร์ลอย ☁️ 🩷 -->
+  <div class="floating-layer" id="floatContainer"></div>
+
+  <div class="app-card">
+    
+    <!-- 1. หน้าแรก (Welcome) -->
+    <div class="page-section active" id="page-welcome">
+      <img src="https://files.catbox.moe/z1ae6e.gif" class="main-gif" alt="gif welcome">
+      <div class="card-title">มาง้อน้าปั้ปป ♡</div>
+      <div class="card-desc">เค้าขอโทษที่ทำให้ไม่สบายใจนะคนดี<br>เปิดฟังเพลงแล้วแวะดูข้างในหน่อยน้า 🥺</div>
+      <button type="button" class="btn-yes" style="width: 100%;" onclick="startAppAndPlayMusic()">
+        เค้ามาง้อเค้าขอโทษ ♡
+      </button>
+    </div>
+
+    <!-- 2. หน้าหลัก (คำขอโทษ + ปุ่มหนีตลอดกาล) -->
+    <div class="page-section" id="page-main">
+      <img src="https://files.catbox.moe/tv5sts.gif" id="cryingGif" class="main-gif" alt="gif begging">
+      <div class="card-title">ขอโทษนะคะคนดี 🥺</div>
+      <div class="card-desc">เค้าขอโทษนะวันนั้นอาจจะไม่ได้ปรับความเข้าใจกัน มาดีกันนะ 😭😭</div>
+      
+      <div class="buttons-row" id="btnContainer">
+        <button type="button" class="btn-yes" onclick="forgiveMe()">คืนดีกันนะ ♡</button>
+        <button type="button" class="btn-no" id="btnNo" onmouseover="dodgeButton(event)" ontouchstart="dodgeButton(event)" onclick="dodgeButton(event)">ไม่เอาไม่คืนดี</button>
+      </div>
+    </div>
+
+    <!-- 3. หน้าขอบคุณ & รับฟังความในใจ -->
+    <div class="page-section" id="page-thanks">
+      <img src="https://files.catbox.moe/tdn7p6.gif" class="main-gif" alt="gif thanks">
+      <div class="card-title">เย้ ดีกันแล้วนะะ ♡</div>
+      <div class="card-desc">ขอบคุณที่อ้วนกดนะะว่าแต่อ้วนเต็มใจหรือป่าว ถ้าไม่เต็มใจเขียนบอกเค้าได้นะ เดี๋ยวเค้าเข้ามาอ่าน TwT</div>
+
+      <textarea id="heartMsg" class="msg-input-box" placeholder="พิมพ์ความในใจบอกเค้าตรงนี้ได้เลยน้า..."></textarea>
+      <button type="button" class="btn-yes" style="width: 100%;" id="sendMsgBtn" onclick="sendHeartMessage()">ส่งข้อความให้เค้า ♡</button>
+
+      <div style="font-size:12px; font-weight:700; color:var(--pink-main); margin-top:14px; text-align:left;">
+        💌 ข้อความที่เคยส่งไว้:
+      </div>
+      <div class="feedback-list" id="feedbackListBox">
+        <div style="font-size:11.5px; color:var(--text-muted); text-align:center; padding:10px;">ยังไม่มีข้อความส่งเข้ามา</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ฐานข้อมูล Firebase สำหรับบันทึกข้อความที่แฟนพิมพ์
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpAGDSy1NRgmLV_g7qJrCpwOhU9MrfQyY",
+      authDomain: "benefitie.firebaseapp.com",
+      projectId: "benefitie",
+      storageBucket: "benefitie.firebasestorage.app",
+      messagingSenderId: "270365672215",
+      appId: "1:270365672215:web:230d1491091e26ce83ed52"
+    };
+
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const DB_APOLOGY_FEEDBACK = "apology_messages";
+
+    // รายการ GIF ร้องไห้ที่จะสลับไปเรื่อย ๆ เมื่อกดปุ่มไม่คืนดี
+    const cryGifs = [
+      "https://files.catbox.moe/tv5sts.gif",
+      "https://files.catbox.moe/xshukp.gif",
+      "https://files.catbox.moe/wij91v.gif",
+      "https://files.catbox.moe/ww8too.gif",
+      "https://files.catbox.moe/hfia5q.gif",
+      "https://files.catbox.moe/gncve2.gif",
+      "https://files.catbox.moe/dv22hi.gif",
+      "https://files.catbox.moe/tbs3xu.gif"
+    ];
+
+    let currentGifIdx = 0;
+    const music = document.getElementById("bgMusic");
+
+    // 1. กดเข้าสู่หน้าหลักและเล่นเพลงทันที
+    function startAppAndPlayMusic() {
+      document.getElementById("page-welcome").classList.remove("active");
+      document.getElementById("page-main").classList.add("active");
+      
+      music.play().catch(err => {
+        console.log("Audio play error:", err);
+      });
+    }
+
+    // 2. ระบบปุ่มหนีตลอดกาล (Dodge Button) หนีทุกทิศทุกมุม + สลับ GIF
+    function dodgeButton(e) {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      const btn = document.getElementById("btnNo");
+      btn.style.position = "fixed";
+      btn.style.zIndex = "999999";
+
+      // คำนวณขอบเขตหน้าจอไม่ให้ปุ่มหลุดจอ
+      const pad = 30;
+      const maxX = window.innerWidth - btn.offsetWidth - pad;
+      const maxY = window.innerHeight - btn.offsetHeight - pad;
+
+      const randomX = Math.max(pad, Math.floor(Math.random() * maxX));
+      const randomY = Math.max(pad, Math.floor(Math.random() * maxY));
+
+      btn.style.left = randomX + "px";
+      btn.style.top = randomY + "px";
+
+      // สลับรูป GIF ไปเรื่อย ๆ
+      currentGifIdx = (currentGifIdx + 1) % cryGifs.length;
+      document.getElementById("cryingGif").src = cryGifs[currentGifIdx];
+    }
+
+    // 3. เมื่อแฟนยอมกดปุ่ม "คืนดีกันนะ"
+    function forgiveMe() {
+      // ซ่อนปุ่มหนีที่อาจจะลอยค้างอยู่
+      const btnNo = document.getElementById("btnNo");
+      if (btnNo) btnNo.style.display = "none";
+
+      document.getElementById("page-main").classList.remove("active");
+      document.getElementById("page-thanks").classList.add("active");
+      listenMessages();
+    }
+
+    // 4. บันทึกข้อความความในใจลงฐานข้อมูล
+    async function sendHeartMessage() {
+      const msgInput = document.getElementById("heartMsg");
+      const text = msgInput.value.trim();
+      const btn = document.getElementById("sendMsgBtn");
+
+      if (!text) {
+        alert("พิมพ์บอกเค้าหน่อยน้าา แม้แต่นิดเดียวก็ยังดีงับ 🥺");
+        return;
+      }
+
+      btn.disabled = true;
+      btn.textContent = "กำลังส่ง...";
+
+      try {
+        await db.collection(DB_APOLOGY_FEEDBACK).add({
+          message: text,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        msgInput.value = "";
+        alert("ส่งข้อความถึงเค้าเรียบร้อยแล้วน้า ขอบคุณมากจริง ๆ นะคะคนดี ♡");
+      } catch (err) {
+        alert("ส่งข้อความไม่สำเร็จ ลองใหม่อีกทีนะคะ: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "ส่งข้อความให้เค้า ♡";
+      }
+    }
+
+    // ดึงข้อความที่เคยส่งมาแสดงบนหน้านั้นให้เข้าไปอ่านได้
+    function listenMessages() {
+      db.collection(DB_APOLOGY_FEEDBACK).onSnapshot(snap => {
+        const box = document.getElementById("feedbackListBox");
+        if (snap.empty) {
+          box.innerHTML = '<div style="font-size:11.5px; color:var(--text-muted); text-align:center; padding:10px;">ยังไม่มีข้อความส่งเข้ามา</div>';
+          return;
+        }
+
+        const msgs = [];
+        snap.forEach(d => msgs.push(d.data()));
+
+        // เรียงจากข้อความล่าสุดลงไป
+        msgs.sort((a, b) => {
+          const tA = a.createdAt ? (a.createdAt.toMillis ? a.createdAt.toMillis() : a.createdAt.seconds * 1000) : 0;
+          const tB = b.createdAt ? (b.createdAt.toMillis ? b.createdAt.toMillis() : b.createdAt.seconds * 1000) : 0;
+          return tB - tA;
+        });
+
+        let html = "";
+        msgs.forEach(m => {
+          html += `
+            <div class="feedback-item">
+              <div>${escapeHtml(m.message)}</div>
+            </div>
+          `;
+        });
+        box.innerHTML = html;
+      });
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    // สร้างลูกเล่นลอย ☁️ และ 🩷
+    const floatLayer = document.getElementById("floatContainer");
+    const icons = ["☁️", "🩷"];
+
+    function spawnFloat() {
+      const el = document.createElement("div");
+      el.className = "float-item";
+      el.textContent = icons[Math.floor(Math.random() * icons.length)];
+      el.style.left = (Math.random() * 90) + "vw";
+      el.style.animationDuration = (7 + Math.random() * 5) + "s";
+      floatLayer.appendChild(el);
+      setTimeout(() => el.remove(), 12000);
+    }
+    setInterval(spawnFloat, 1400);
+  </script>
+</body>
+</html>
